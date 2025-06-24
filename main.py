@@ -42,6 +42,9 @@ while True:
     
     img_contours = img.copy()
     img_points_contours = img.copy()
+    img_warped_colored = img.copy(
+        
+    )
     
     contours, hierarchy = cv.findContours(img_thresh_hold, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     cv.drawContours(img_contours, contours, -1, (0, 255, 0), 10)
@@ -50,11 +53,24 @@ while True:
     biggest, biggest_area = utils.biggest_contour(contours)
     
     if biggest.size != 0:
+        
         biggest = utils.reorder(biggest)
         cv.drawContours(img_points_contours, biggest, -1, (0, 255, 0), 20)
+        img_points_contours = utils.draw_rectangle(img_points_contours, biggest, 2)
+        
+        pts1 = np.float32(biggest)
+        pts2 = np.float32([[0, 0], [width_image, 0], [0, height_image], [width_image, height_image]])
+        matrix = cv.getPerspectiveTransform(pts1, pts2)
+        
+        img_warped_colored = cv.warpPerspective(img, matrix, (width_image, height_image))
+        
+        img_warped_colored = img_warped_colored[10:img_warped_colored.shape[0] - 10, 10:img_warped_colored.shape[1] - 10]
+        img_warped_colored = cv.resize(img_warped_colored, (width_image, height_image))
+        
+            
     
     cv.imshow("Result-2", img_points_contours)
-
+    cv.imshow("warp", img_warped_colored)
 
     if cv.waitKey(1) & 0xFF == ord('q'):
         break
