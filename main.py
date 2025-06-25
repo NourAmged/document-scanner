@@ -2,12 +2,16 @@ import numpy as np
 import utils
 import cv2 as cv
 
+from datetime import datetime
+
 web_cam_feed = True
 path_image = "path/to/image.jpg" 
 cap = None
+
+timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
 if web_cam_feed:
     cap = cv.VideoCapture(0)
-    cap.set(cv.CAP_PROP_BRIGHTNESS, 160)  
 else:
     img = cv.imread(path_image)
 
@@ -42,13 +46,12 @@ while True:
     
     img_contours = img.copy()
     img_points_contours = img.copy()
-    img_warped_colored = img.copy(
-        
-    )
+    img_warped_colored = img.copy()
+    img_adaptive_thresh = img.copy()
     
     contours, hierarchy = cv.findContours(img_thresh_hold, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     cv.drawContours(img_contours, contours, -1, (0, 255, 0), 10)
-    cv.imshow("Result-1", img_contours)
+    cv.imshow("Contours", img_contours)
     
     biggest, biggest_area = utils.biggest_contour(contours)
     
@@ -67,12 +70,24 @@ while True:
         img_warped_colored = img_warped_colored[10:img_warped_colored.shape[0] - 10, 10:img_warped_colored.shape[1] - 10]
         img_warped_colored = cv.resize(img_warped_colored, (width_image, height_image))
         
+        img_warped_gray = cv.cvtColor(img_warped_colored, cv.COLOR_BGR2GRAY)
+        img_adaptive_thresh = cv.adaptiveThreshold(img_warped_gray, 255, 1, 1, 7, 2)
+        img_adaptive_thresh = cv.bitwise_not(img_adaptive_thresh)
+        img_adaptive_thresh = cv.medianBlur(img_adaptive_thresh, 3)
+        
+        
             
     
-    cv.imshow("Result-2", img_points_contours)
-    cv.imshow("warp", img_warped_colored)
-
-    if cv.waitKey(1) & 0xFF == ord('q'):
+    cv.imshow("Biggest Contour", img_points_contours)
+    cv.imshow("Warp Perspective", img_warped_colored)
+    cv.imshow("Adaptive Threshold", img_adaptive_thresh)
+    
+    key = cv.waitKey(1) & 0xFF
+    
+    if key == ord('s'):
+        cv.imwrite("Img" + timestamp + ".jpg", img_warped_colored)
+    
+    if key == ord('q'):
         break
 
 if cap:
