@@ -58,3 +58,45 @@ def draw_rectangle(img, biggest, thickness):
 
     return img
 
+
+import cv2 as cv
+import numpy as np
+
+def stacked_images(scale, img_array):
+    rows = len(img_array)
+    cols = len(img_array[0])
+    
+    # Ensure all images have 3 channels (convert grayscale to BGR)
+    for i in range(rows):
+        for j in range(cols):
+            img = img_array[i][j]
+            if img is None:
+                continue
+            if len(img.shape) == 2:  # grayscale
+                img_array[i][j] = cv.cvtColor(img, cv.COLOR_GRAY2BGR)
+
+    # Determine reference size based on first image
+    width = int(img_array[0][0].shape[1] * scale)
+    height = int(img_array[0][0].shape[0] * scale)
+
+    # Create blank image placeholder
+    image_blank = np.zeros((height, width, 3), dtype=np.uint8)
+
+    # Resize all images to the same dimensions and fill None with blank
+    for i in range(rows):
+        for j in range(cols):
+            if img_array[i][j] is None:
+                img_array[i][j] = image_blank
+            else:
+                img_array[i][j] = cv.resize(img_array[i][j], (width, height), interpolation=cv.INTER_AREA)
+
+    # Stack horizontally row by row
+    hor_images = [np.hstack(img_array[i]) for i in range(rows)]
+    
+    # Stack all rows vertically
+    stacked_image = np.vstack(hor_images)
+
+    return stacked_image
+
+
+

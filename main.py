@@ -1,26 +1,29 @@
+from datetime import datetime
 import numpy as np
 import utils
 import cv2 as cv
 
-from datetime import datetime
 
-web_cam_feed = True
-path_image = "path/to/image.jpg" 
+
+web_cam_feed = False
+path_image = "Untitled.jpg" 
 cap = None
 
-timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
 
 if web_cam_feed:
-    cap = cv.VideoCapture(0)
+    cap = cv.VideoCapture("http://192.168.1.2:8080/video")
 else:
     img = cv.imread(path_image)
 
-height_image = 640
-width_image = 480
+height_image = 720
+width_image = 1080
 
 utils.initialize_track_bar() 
 
 while True:
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    
     if web_cam_feed:
         success, img = cap.read()
         if not success:
@@ -51,7 +54,6 @@ while True:
     
     contours, hierarchy = cv.findContours(img_thresh_hold, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     cv.drawContours(img_contours, contours, -1, (0, 255, 0), 10)
-    cv.imshow("Contours", img_contours)
     
     biggest, biggest_area = utils.biggest_contour(contours)
     
@@ -75,18 +77,22 @@ while True:
         img_adaptive_thresh = cv.bitwise_not(img_adaptive_thresh)
         img_adaptive_thresh = cv.medianBlur(img_adaptive_thresh, 3)
         
-        
+       
+    image_array = ([img_contours, img_points_contours],
+                      [img_warped_colored, img_adaptive_thresh])
+    
+    labels = [["Contours", "Biggest Contour"],
+              "Warp Perspective", "Adaptive Threshold"] 
             
-    
-    cv.imshow("Biggest Contour", img_points_contours)
-    cv.imshow("Warp Perspective", img_warped_colored)
-    cv.imshow("Adaptive Threshold", img_adaptive_thresh)
-    
+    stacked_image = utils.stacked_images(0.5, image_array)
+
+    cv.imshow("Stacked Images", stacked_image)
+
     key = cv.waitKey(1) & 0xFF
     
     if key == ord('s'):
         cv.imwrite("Img" + timestamp + ".jpg", img_warped_colored)
-    
+        cv.imwrite("ImgThresh" + timestamp + ".jpg", img_adaptive_thresh)
     if key == ord('q'):
         break
 
