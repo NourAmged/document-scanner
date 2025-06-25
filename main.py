@@ -10,9 +10,8 @@ path_image = "Untitled.jpg"
 cap = None
 
 
-
 if web_cam_feed:
-    cap = cv.VideoCapture("http://192.168.1.2:8080/video")
+    cap = cv.VideoCapture(0)
 else:
     img = cv.imread(path_image)
 
