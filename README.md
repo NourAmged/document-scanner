@@ -33,4 +33,4 @@ This project is a simple Document Scanner built with Python and OpenCV. It allow
 
 
 ## Example
-
+![Example Scanned Document](example.jpg)
